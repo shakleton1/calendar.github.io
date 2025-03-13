@@ -15,7 +15,6 @@
             align-items: center;
             height: 100vh;
         }
-
         .calendar-container {
             background: #ffffff;
             border-radius: 20px;
@@ -24,8 +23,11 @@
             width: 90%;
             max-width: 400px;
             animation: fadeIn 0.5s ease-in-out;
+            transition: filter 0.3s ease-in-out;
         }
-
+        .blur-effect {
+            filter: blur(5px);
+        }
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -36,7 +38,6 @@
                 transform: scale(1);
             }
         }
-
         .calendar-header {
             display: flex;
             justify-content: space-between;
@@ -45,7 +46,6 @@
             background: #007bff;
             color: white;
         }
-
         .calendar-header button {
             background: none;
             border: none;
@@ -53,7 +53,6 @@
             font-size: 18px;
             cursor: pointer;
         }
-
         .calendar-header .year-selector,
         .calendar-header .month-selector {
             position: relative;
@@ -61,110 +60,76 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-
         .calendar-header .year-selector:hover,
         .calendar-header .month-selector:hover {
             opacity: 0.8;
             transform: scale(1.05);
         }
-
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             text-align: center;
             padding: 10px;
         }
-
         .calendar-grid div {
             padding: 10px;
             font-size: 14px;
             cursor: pointer;
             transition: background 0.3s ease, transform 0.3s ease;
         }
-
         .calendar-grid div:hover {
             background: #e0e0e0;
             transform: scale(1.1);
         }
-
         .calendar-grid .day {
             font-weight: bold;
         }
-
         .calendar-grid .selected {
             background: #007bff;
             color: white;
             border-radius: 50%;
         }
-
         /* Year Picker */
-        .year-picker {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            width: 150px;
-            overflow-y: auto;
-            max-height: 200px;
-            z-index: 10;
-            display: none;
-            animation: slideUp 0.3s ease-in-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .year-picker div {
-            padding: 10px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .year-picker div:hover {
-            background: #e0e0e0;
-        }
-
-        /* Month Picker */
+        .year-picker,
         .month-picker {
             position: absolute;
-            top: 100%;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            border-radius: 10px;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            width: 150px;
-            z-index: 10;
+            width: 90%;
+            max-width: 300px;
+            overflow-y: auto;
+            max-height: 300px;
+            z-index: 100;
             display: none;
-            animation: slideUp 0.3s ease-in-out;
+            animation: fadeIn 0.5s ease-in-out;
         }
-
+        .year-picker div,
         .month-picker div {
-            padding: 10px;
+            padding: 15px;
             cursor: pointer;
             transition: background 0.3s ease;
+            font-size: 16px;
+            text-align: center;
+            opacity: 0.6;
         }
-
+        .year-picker div.active,
+        .month-picker div.active {
+            opacity: 1;
+            font-weight: bold;
+        }
+        .year-picker div:hover,
         .month-picker div:hover {
-            background: #e0e0e0;
+            background: rgba(0, 123, 255, 0.1);
         }
-
         @media (max-width: 600px) {
             .calendar-header {
                 font-size: 16px;
             }
-
             .calendar-grid div {
                 font-size: 12px;
                 padding: 8px;
@@ -191,14 +156,11 @@
         <div class="day">Вс</div>
         <!-- Calendar days will be dynamically generated here -->
     </div>
-
     <!-- Year Picker -->
     <div class="year-picker" id="yearPicker"></div>
-
     <!-- Month Picker -->
     <div class="month-picker" id="monthPicker"></div>
 </div>
-
 <script>
     const calendarGrid = document.getElementById('calendarGrid');
     const monthSelector = document.getElementById('monthSelector');
@@ -207,7 +169,7 @@
     const nextMonthButton = document.getElementById('nextMonth');
     const yearPicker = document.getElementById('yearPicker');
     const monthPicker = document.getElementById('monthPicker');
-
+    const calendarContainer = document.querySelector('.calendar-container');
     let currentDate = new Date();
     let selectedDate = null;
 
@@ -216,10 +178,8 @@
         const lastDay = new Date(year, month + 1, 0);
         const daysInMonth = lastDay.getDate();
         const startDay = firstDay.getDay() === 0 ? 7 : firstDay.getDay();
-
         monthSelector.textContent = getMonthName(month);
         yearSelector.textContent = year;
-
         // Clear previous days
         calendarGrid.innerHTML = '';
         for (let i = 0; i < 7; i++) {
@@ -228,13 +188,11 @@
             dayHeader.textContent = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'][i];
             calendarGrid.appendChild(dayHeader);
         }
-
         // Add empty cells for days before the first day of the month
         for (let i = 1; i < startDay; i++) {
             const emptyCell = document.createElement('div');
             calendarGrid.appendChild(emptyCell);
         }
-
         // Add days of the month
         for (let day = 1; day <= daysInMonth; day++) {
             const dayCell = document.createElement('div');
@@ -271,7 +229,8 @@
 
     // Year Picker
     yearSelector.addEventListener('click', () => {
-        yearPicker.style.display = yearPicker.style.display === 'block' ? 'none' : 'block';
+        calendarContainer.classList.add('blur-effect');
+        yearPicker.style.display = 'block';
         populateYearPicker();
     });
 
@@ -281,18 +240,27 @@
         for (let year = currentYear - 100; year <= currentYear; year++) {
             const yearItem = document.createElement('div');
             yearItem.textContent = year;
+            if (year === currentYear) {
+                yearItem.classList.add('active');
+            }
             yearItem.addEventListener('click', () => {
                 currentDate.setFullYear(year);
                 renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
-                yearPicker.style.display = 'none';
+                hideYearPicker();
             });
             yearPicker.appendChild(yearItem);
         }
     }
 
+    function hideYearPicker() {
+        calendarContainer.classList.remove('blur-effect');
+        yearPicker.style.display = 'none';
+    }
+
     // Month Picker
     monthSelector.addEventListener('click', () => {
-        monthPicker.style.display = monthPicker.style.display === 'block' ? 'none' : 'block';
+        calendarContainer.classList.add('blur-effect');
+        monthPicker.style.display = 'block';
         populateMonthPicker();
     });
 
@@ -305,18 +273,34 @@
         months.forEach((month, index) => {
             const monthItem = document.createElement('div');
             monthItem.textContent = month;
+            if (index === currentDate.getMonth()) {
+                monthItem.classList.add('active');
+            }
             monthItem.addEventListener('click', () => {
                 currentDate.setMonth(index);
                 renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
-                monthPicker.style.display = 'none';
+                hideMonthPicker();
             });
             monthPicker.appendChild(monthItem);
         });
     }
 
+    function hideMonthPicker() {
+        calendarContainer.classList.remove('blur-effect');
+        monthPicker.style.display = 'none';
+    }
+
+    document.addEventListener('click', (event) => {
+        if (!yearPicker.contains(event.target) && !yearSelector.contains(event.target)) {
+            hideYearPicker();
+        }
+        if (!monthPicker.contains(event.target) && !monthSelector.contains(event.target)) {
+            hideMonthPicker();
+        }
+    });
+
     Telegram.WebApp.ready();
     Telegram.WebApp.MainButton.hide();
-
     Telegram.WebApp.MainButton.onClick(() => {
         if (selectedDate) {
             const data = JSON.stringify({
