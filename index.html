@@ -54,6 +54,20 @@
             cursor: pointer;
         }
 
+        .calendar-header .year-selector,
+        .calendar-header .month-selector {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-header .year-selector:hover,
+        .calendar-header .month-selector:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -83,6 +97,69 @@
             border-radius: 50%;
         }
 
+        /* Year Picker */
+        .year-picker {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 150px;
+            overflow-y: auto;
+            max-height: 200px;
+            z-index: 10;
+            display: none;
+            animation: slideUp 0.3s ease-in-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .year-picker div {
+            padding: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .year-picker div:hover {
+            background: #e0e0e0;
+        }
+
+        /* Month Picker */
+        .month-picker {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 150px;
+            z-index: 10;
+            display: none;
+            animation: slideUp 0.3s ease-in-out;
+        }
+
+        .month-picker div {
+            padding: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .month-picker div:hover {
+            background: #e0e0e0;
+        }
+
         @media (max-width: 600px) {
             .calendar-header {
                 font-size: 16px;
@@ -99,7 +176,8 @@
 <div class="calendar-container">
     <div class="calendar-header">
         <button id="prevMonth"><</button>
-        <span id="currentMonthYear">Месяц Год</span>
+        <div class="month-selector" id="monthSelector">Месяц</div>
+        <div class="year-selector" id="yearSelector">Год</div>
         <button id="nextMonth">></button>
     </div>
     <div class="calendar-grid" id="calendarGrid">
@@ -113,13 +191,22 @@
         <div class="day">Вс</div>
         <!-- Calendar days will be dynamically generated here -->
     </div>
+
+    <!-- Year Picker -->
+    <div class="year-picker" id="yearPicker"></div>
+
+    <!-- Month Picker -->
+    <div class="month-picker" id="monthPicker"></div>
 </div>
 
 <script>
     const calendarGrid = document.getElementById('calendarGrid');
-    const currentMonthYear = document.getElementById('currentMonthYear');
+    const monthSelector = document.getElementById('monthSelector');
+    const yearSelector = document.getElementById('yearSelector');
     const prevMonthButton = document.getElementById('prevMonth');
     const nextMonthButton = document.getElementById('nextMonth');
+    const yearPicker = document.getElementById('yearPicker');
+    const monthPicker = document.getElementById('monthPicker');
 
     let currentDate = new Date();
     let selectedDate = null;
@@ -128,9 +215,10 @@
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
         const daysInMonth = lastDay.getDate();
-        const startDay = firstDay.getDay() === 0 ? 7 : firstDay.getDay(); // Monday as the first day
+        const startDay = firstDay.getDay() === 0 ? 7 : firstDay.getDay();
 
-        currentMonthYear.textContent = `${getMonthName(month)} ${year}`;
+        monthSelector.textContent = getMonthName(month);
+        yearSelector.textContent = year;
 
         // Clear previous days
         calendarGrid.innerHTML = '';
@@ -180,6 +268,51 @@
         currentDate.setMonth(currentDate.getMonth() + 1);
         renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
     });
+
+    // Year Picker
+    yearSelector.addEventListener('click', () => {
+        yearPicker.style.display = yearPicker.style.display === 'block' ? 'none' : 'block';
+        populateYearPicker();
+    });
+
+    function populateYearPicker() {
+        yearPicker.innerHTML = '';
+        const currentYear = currentDate.getFullYear();
+        for (let year = currentYear - 100; year <= currentYear; year++) {
+            const yearItem = document.createElement('div');
+            yearItem.textContent = year;
+            yearItem.addEventListener('click', () => {
+                currentDate.setFullYear(year);
+                renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
+                yearPicker.style.display = 'none';
+            });
+            yearPicker.appendChild(yearItem);
+        }
+    }
+
+    // Month Picker
+    monthSelector.addEventListener('click', () => {
+        monthPicker.style.display = monthPicker.style.display === 'block' ? 'none' : 'block';
+        populateMonthPicker();
+    });
+
+    function populateMonthPicker() {
+        monthPicker.innerHTML = '';
+        const months = [
+            'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+            'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+        ];
+        months.forEach((month, index) => {
+            const monthItem = document.createElement('div');
+            monthItem.textContent = month;
+            monthItem.addEventListener('click', () => {
+                currentDate.setMonth(index);
+                renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
+                monthPicker.style.display = 'none';
+            });
+            monthPicker.appendChild(monthItem);
+        });
+    }
 
     Telegram.WebApp.ready();
     Telegram.WebApp.MainButton.hide();
